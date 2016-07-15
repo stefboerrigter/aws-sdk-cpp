@@ -26,6 +26,8 @@ set(ACCESS_MANAGEMENT_INCLUDES
     "${AWS_NATIVE_SDK_ROOT}/aws-cpp-sdk-cognito-identity/include/"
     "${CORE_DIR}/include/"
   )
+  
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 
 include_directories(${ACCESS_MANAGEMENT_INCLUDES})
 

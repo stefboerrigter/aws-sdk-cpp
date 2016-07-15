@@ -1,12 +1,12 @@
 /*
   * Copyright 2010-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-  * 
+  *
   * Licensed under the Apache License, Version 2.0 (the "License").
   * You may not use this file except in compliance with the License.
   * A copy of the License is located at
-  * 
+  *
   *  http://aws.amazon.com/apache2.0
-  * 
+  *
   * or in the "license" file accompanying this file. This file is distributed
   * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
   * express or implied. See the License for the specific language governing
@@ -95,6 +95,7 @@
 #include <aws/core/utils/logging/LogMacros.h>
 
 #include <regex>
+#include <exception>
 #include <fstream>
 
 using namespace Aws::AccessManagement;
@@ -138,7 +139,7 @@ QueryResult AccessManagementClient::GetGroup(const Aws::String& groupName, Aws::
             return QueryResult::FAILURE;
         }
     }
-    
+
     groupData = outcome.GetResult().GetGroup();
 
     return QueryResult::YES;
@@ -158,7 +159,7 @@ QueryResult AccessManagementClient::GetPolicy(const Aws::String& policyName, Aws
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListPolicies failed: " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto policyDescriptions = outcome.GetResult().GetPolicies();
         auto policyIter = std::find_if(policyDescriptions.cbegin(), policyDescriptions.cend(), [&](const Policy& desc){ return desc.GetPolicyName() == policyName; });
         if(policyIter != policyDescriptions.cend())
@@ -227,7 +228,7 @@ QueryResult AccessManagementClient::GetUser(const Aws::String& userName, Aws::IA
             return QueryResult::FAILURE;
         }
     }
-    
+
     userData = outcome.GetResult().GetUser();
 
     return QueryResult::YES;
@@ -333,7 +334,7 @@ QueryResult AccessManagementClient::IsUserInGroup(const Aws::String& userName, c
             AWS_LOGSTREAM_INFO(LOG_TAG, "GetGroup failed for group " << groupName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto users = outcome.GetResult().GetUsers();
         auto userIter = std::find_if(users.cbegin(), users.cend(), [&](const User& userDesc){ return userDesc.GetUserName() == userName; });
         if(userIter != users.cend())
@@ -369,7 +370,7 @@ bool AccessManagementClient::AddUserToGroup(const Aws::String& userName, const A
         AWS_LOGSTREAM_INFO(LOG_TAG, "AddUserToGroup failed for group " << groupName << " and user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return false;
     }
-    
+
     return true;
 }
 
@@ -378,7 +379,7 @@ bool AccessManagementClient::RemoveUserFromGroup(const Aws::String& userName, co
     RemoveUserFromGroupRequest removeRequest;
     removeRequest.SetGroupName(groupName);
     removeRequest.SetUserName(userName);
-        
+
     auto outcome = m_iamClient->RemoveUserFromGroup(removeRequest);
     if(!outcome.IsSuccess())
     {
@@ -401,7 +402,7 @@ bool AccessManagementClient::AttachPolicyToGroup(const Aws::String& policyArn, c
         AWS_LOGSTREAM_INFO(LOG_TAG, "AttachGroupPolicy failed for group " << groupName << " and policy arn " << policyArn << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return false;
     }
-    
+
     return true;
 }
 
@@ -417,7 +418,7 @@ bool AccessManagementClient::AttachPolicyToRole(const Aws::String& policyArn, co
         AWS_LOGSTREAM_INFO(LOG_TAG, "AttachRolePolicy failed for role " << roleName << " and policy arn " << policyArn << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return false;
     }
-    
+
     return true;
 }
 
@@ -433,7 +434,7 @@ bool AccessManagementClient::AttachPolicyToUser(const Aws::String& policyArn, co
         AWS_LOGSTREAM_INFO(LOG_TAG, "AttachRolePolicy failed for user " << userName << " and policy arn " << policyArn << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return false;
     }
-    
+
     return true;
 }
 
@@ -442,7 +443,7 @@ bool AccessManagementClient::DetachPolicyFromGroup(const Aws::String& policyArn,
     DetachGroupPolicyRequest detachRequest;
     detachRequest.SetGroupName(groupName);
     detachRequest.SetPolicyArn(policyArn);
-        
+
     auto outcome = m_iamClient->DetachGroupPolicy(detachRequest);
     if (!outcome.IsSuccess())
     {
@@ -458,7 +459,7 @@ bool AccessManagementClient::DetachPolicyFromRole(const Aws::String& policyArn, 
     DetachRolePolicyRequest detachRequest;
     detachRequest.SetRoleName(roleName);
     detachRequest.SetPolicyArn(policyArn);
-        
+
     auto outcome = m_iamClient->DetachRolePolicy(detachRequest);
     if (!outcome.IsSuccess())
     {
@@ -474,7 +475,7 @@ bool AccessManagementClient::DetachPolicyFromUser(const Aws::String& policyArn, 
     DetachUserPolicyRequest detachRequest;
     detachRequest.SetUserName(userName);
     detachRequest.SetPolicyArn(policyArn);
-        
+
     auto outcome = m_iamClient->DetachUserPolicy(detachRequest);
     if (!outcome.IsSuccess())
     {
@@ -500,7 +501,7 @@ QueryResult AccessManagementClient::IsPolicyAttachedToGroup(const Aws::String& p
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListAttachedGroupPolicies failed for group " << groupName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto attachedPolicies = outcome.GetResult().GetAttachedPolicies();
         auto policyIter = std::find_if(attachedPolicies.cbegin(), attachedPolicies.cend(), [&](const AttachedPolicy& desc){ return desc.GetPolicyName() == policyName; });
         if(policyIter != attachedPolicies.cend())
@@ -539,7 +540,7 @@ QueryResult AccessManagementClient::IsPolicyAttachedToRole(const Aws::String& po
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListAttachedRolePolicies failed for role " << roleName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto attachedPolicies = outcome.GetResult().GetAttachedPolicies();
         auto policyIter = std::find_if(attachedPolicies.cbegin(), attachedPolicies.cend(), [&](const AttachedPolicy& desc){ return desc.GetPolicyName() == policyName; });
         if(policyIter != attachedPolicies.cend())
@@ -578,7 +579,7 @@ QueryResult AccessManagementClient::IsPolicyAttachedToUser(const Aws::String& po
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListAttachedUserPolicies failed for user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto attachedPolicies = outcome.GetResult().GetAttachedPolicies();
         auto policyIter = std::find_if(attachedPolicies.cbegin(), attachedPolicies.cend(), [&](const AttachedPolicy& desc){ return desc.GetPolicyName() == policyName; });
         if(policyIter != attachedPolicies.cend())
@@ -607,17 +608,32 @@ QueryResult AccessManagementClient::IsPolicyAttachedToUser(const Aws::String& po
 Aws::String AccessManagementClient::ExtractAccountIdFromArn(const Aws::String& arn)
 {
     std::string searchTarget(arn.c_str());
-    std::regex accountIdRegex("::(\\d*):");
+    Aws::String resultString = "";
+    //regex could cause sigabort in some gcc compilers < version 5, therefore added try catch
+    //and if it fails, use oldfasion substr and find method to locate ::(substring):user substring.
+	  try
+	  {     
+    	  std::regex accountIdRegex("::(\\d*):");
 
-    std::smatch arnMatchResults;
-    std::regex_search(searchTarget, arnMatchResults, accountIdRegex);
+    	  std::smatch arnMatchResults;
+    	  std::regex_search(searchTarget, arnMatchResults, accountIdRegex);
+    	  if(arnMatchResults.size() >= 2)
+    	  {
+        	  return arnMatchResults[1].str().c_str();
+    	  }
 
-    if(arnMatchResults.size() >= 2)
-    {
-        return arnMatchResults[1].str().c_str();
-    }
-
-    return "";
+	  }catch(std::exception &e){
+        //try 'old' fashion way;
+        //+2 since we need to skip the :: characters
+        const size_t SKIP_CHARACTERS = 2; //strlen("::")
+        std::size_t pos1 = searchTarget.find("::");
+        std::size_t pos2 = searchTarget.find(":user");
+        
+        std::string result = searchTarget.substr((pos1 + SKIP_CHARACTERS), ((pos2-pos1) - SKIP_CHARACTERS));
+        
+        result.copy((char *)&resultString, result.length());
+	  }
+	  return resultString;
 }
 
 bool AccessManagementClient::DoesCredentialsFileExist(const Aws::String& credentialsFilename)
@@ -627,7 +643,7 @@ bool AccessManagementClient::DoesCredentialsFileExist(const Aws::String& credent
     credentialsFile.close();
 
     return result;
-} 
+}
 
 bool AccessManagementClient::CreateCredentialsFileForUser(const Aws::String& credentialsFilename, const Aws::String& userName)
 {
@@ -676,7 +692,7 @@ bool AccessManagementClient::RemoveUsersFromGroup(const Aws::String& groupName)
 
             return true;
         }
-    
+
         auto users = outcome.GetResult().GetUsers();
         std::for_each(users.cbegin(), users.cend(), [&](const User& userDesc){ userNames.push_back(userDesc.GetUserName()); } );
 
@@ -722,7 +738,7 @@ bool AccessManagementClient::DetachPoliciesFromGroup(const Aws::String& groupNam
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetAttachedPolicies();
         std::for_each(policies.cbegin(), policies.cend(), [&](const AttachedPolicy& policy){ policyArns.push_back(policy.GetPolicyArn()); } );
 
@@ -767,7 +783,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromGroup(const Aws::String& gr
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetPolicyNames();
         std::copy(policies.begin(), policies.end(), std::back_inserter(policyNames));
 
@@ -787,7 +803,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromGroup(const Aws::String& gr
         DeleteGroupPolicyRequest deleteRequest;
         deleteRequest.SetGroupName(groupName);
         deleteRequest.SetPolicyName(policyNames[i]);
-        
+
         DeleteGroupPolicyOutcome outcome = m_iamClient->DeleteGroupPolicy(deleteRequest);
         if (!outcome.IsSuccess())
         {
@@ -803,24 +819,24 @@ bool AccessManagementClient::DeleteGroup(const Aws::String& groupName)
 {
     Aws::IAM::Model::Group groupDesc;
     auto result = GetGroup(groupName, groupDesc);
-    if (result != QueryResult::YES) 
+    if (result != QueryResult::YES)
     {
         return result == QueryResult::NO;
     }
 
     if (!RemoveUsersFromGroup(groupName))
     {
-        return false;     
+        return false;
     }
 
     if (!DetachPoliciesFromGroup(groupName))
     {
-        return false;  
+        return false;
     }
 
     if (!DeleteInlinePoliciesFromGroup(groupName))
     {
-        return false;  
+        return false;
     }
 
     DeleteGroupRequest deleteRequest;
@@ -847,7 +863,7 @@ bool AccessManagementClient::DeleteAccessKeysForUser(const Aws::String& userName
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListAccessKeys failed for user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return false;
         }
-    
+
         auto keys = outcome.GetResult().GetAccessKeyMetadata();
         std::for_each(keys.cbegin(), keys.cend(), [&](const AccessKeyMetadata& keyData){ accessKeys.push_back(keyData.GetAccessKeyId()); } );
 
@@ -867,7 +883,7 @@ bool AccessManagementClient::DeleteAccessKeysForUser(const Aws::String& userName
         DeleteAccessKeyRequest deleteRequest;
         deleteRequest.SetUserName(userName);
         deleteRequest.SetAccessKeyId(accessKeys[i]);
-        
+
         DeleteAccessKeyOutcome outcome = m_iamClient->DeleteAccessKey(deleteRequest);
         if (!outcome.IsSuccess())
         {
@@ -896,7 +912,7 @@ bool AccessManagementClient::RemoveUserFromGroups(const Aws::String& userName)
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListGroupsForUser failed for user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return false;
         }
-    
+
         auto groups = outcome.GetResult().GetGroups();
         std::for_each(groups.cbegin(), groups.cend(), [&](const Group& groupData){ groupNames.push_back(groupData.GetGroupName()); } );
 
@@ -936,7 +952,7 @@ bool AccessManagementClient::RemoveCertificatesFromUser(const Aws::String& userN
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListSigningCertificates failed for user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return false;
         }
-    
+
         auto certificates = outcome.GetResult().GetCertificates();
         std::for_each(certificates.cbegin(), certificates.cend(), [&](const SigningCertificate& certificateData){ certificateIds.push_back(certificateData.GetCertificateId()); } );
 
@@ -956,7 +972,7 @@ bool AccessManagementClient::RemoveCertificatesFromUser(const Aws::String& userN
         DeleteSigningCertificateRequest deleteRequest;
         deleteRequest.SetUserName(userName);
         deleteRequest.SetCertificateId(certificateIds[i]);
-        
+
         DeleteSigningCertificateOutcome outcome = m_iamClient->DeleteSigningCertificate(deleteRequest);
         if (!outcome.IsSuccess())
         {
@@ -987,7 +1003,7 @@ bool AccessManagementClient::RemovePasswordFromUser(const Aws::String& userName)
 
     DeleteLoginProfileRequest deleteRequest;
     deleteRequest.SetUserName(userName);
-        
+
     DeleteLoginProfileOutcome deleteOutcome = m_iamClient->DeleteLoginProfile(deleteRequest);
     if (!deleteOutcome.IsSuccess())
     {
@@ -1019,7 +1035,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromUser(const Aws::String& use
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetPolicyNames();
         std::copy(policies.begin(), policies.end(), std::back_inserter(policyNames));
 
@@ -1039,7 +1055,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromUser(const Aws::String& use
         DeleteUserPolicyRequest deleteRequest;
         deleteRequest.SetUserName(userName);
         deleteRequest.SetPolicyName(policyNames[i]);
-        
+
         DeleteUserPolicyOutcome outcome = m_iamClient->DeleteUserPolicy(deleteRequest);
         if (!outcome.IsSuccess())
         {
@@ -1068,7 +1084,7 @@ bool AccessManagementClient::RemoveMFAFromUser(const Aws::String& userName)
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListMFADevices failed for user " << userName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return false;
         }
-    
+
         auto devices = outcome.GetResult().GetMFADevices();
         std::for_each(devices.cbegin(), devices.cend(), [&](const MFADevice& deviceData){ serialNumbers.push_back(deviceData.GetSerialNumber()); } );
 
@@ -1088,7 +1104,7 @@ bool AccessManagementClient::RemoveMFAFromUser(const Aws::String& userName)
         DeactivateMFADeviceRequest deactivateRequest;
         deactivateRequest.SetUserName(userName);
         deactivateRequest.SetSerialNumber(serialNumbers[i]);
-        
+
         DeactivateMFADeviceOutcome outcome = m_iamClient->DeactivateMFADevice(deactivateRequest);
         if (!outcome.IsSuccess())
         {
@@ -1122,7 +1138,7 @@ bool AccessManagementClient::DetachPoliciesFromUser(const Aws::String& userName)
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetAttachedPolicies();
         std::for_each(policies.cbegin(), policies.cend(), [&](const AttachedPolicy& policy){ policyArns.push_back(policy.GetPolicyArn()); } );
 
@@ -1168,11 +1184,11 @@ bool AccessManagementClient::DeleteUser(const Aws::String& userName)
     {
         return false;
     }
-        
+
     if (!RemoveMFAFromUser(userName))
     {
         return false;
-    }    
+    }
 
     if (!RemovePasswordFromUser(userName))
     {
@@ -1219,7 +1235,7 @@ bool AccessManagementClient::RemovePolicyFromEntities(const Aws::String& policyA
 
             return true;
         }
-    
+
         auto groups = outcome.GetResult().GetPolicyGroups();
         std::for_each(groups.cbegin(), groups.cend(), [&](const PolicyGroup& groupData){ groupNames.push_back(groupData.GetGroupName()); } );
 
@@ -1296,7 +1312,7 @@ bool AccessManagementClient::RemoveRoleFromInstanceProfiles(const Aws::String& r
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListInstanceProfilesForRole failed for role " << roleName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return false;
         }
-    
+
         auto profiles = outcome.GetResult().GetInstanceProfiles();
         std::for_each(profiles.cbegin(), profiles.cend(), [&](const InstanceProfile& profileData){ profileNames.push_back(profileData.GetInstanceProfileName()); } );
 
@@ -1316,7 +1332,7 @@ bool AccessManagementClient::RemoveRoleFromInstanceProfiles(const Aws::String& r
         RemoveRoleFromInstanceProfileRequest removeRequest;
         removeRequest.SetRoleName(roleName);
         removeRequest.SetInstanceProfileName(profileNames[i]);
-        
+
         RemoveRoleFromInstanceProfileOutcome outcome = m_iamClient->RemoveRoleFromInstanceProfile(removeRequest);
         if (!outcome.IsSuccess())
         {
@@ -1350,7 +1366,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromRole(const Aws::String& rol
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetPolicyNames();
         std::copy(policies.begin(), policies.end(), std::back_inserter(policyNames));
 
@@ -1370,7 +1386,7 @@ bool AccessManagementClient::DeleteInlinePoliciesFromRole(const Aws::String& rol
         DeleteRolePolicyRequest deleteRequest;
         deleteRequest.SetRoleName(roleName);
         deleteRequest.SetPolicyName(policyNames[i]);
-        
+
         DeleteRolePolicyOutcome outcome = m_iamClient->DeleteRolePolicy(deleteRequest);
         if (!outcome.IsSuccess())
         {
@@ -1404,7 +1420,7 @@ bool AccessManagementClient::DetachPoliciesFromRole(const Aws::String& roleName)
 
             return true;
         }
-    
+
         auto policies = outcome.GetResult().GetAttachedPolicies();
         std::for_each(policies.cbegin(), policies.cend(), [&](const AttachedPolicy& policy){ policyArns.push_back(policy.GetPolicyArn()); } );
 
@@ -1532,10 +1548,10 @@ bool AccessManagementClient::GetOrCreateUser(const Aws::String& userName, Aws::I
 
 Aws::String AccessManagementClient::GetAccountId()
 {
-    GetUserRequest getUserRequest;  
+    GetUserRequest getUserRequest;
 
     auto outcome = m_iamClient->GetUser(getUserRequest);
-    
+
     if (outcome.IsSuccess())
     {
         return ExtractAccountIdFromArn(outcome.GetResult().GetUser().GetArn());
@@ -1544,7 +1560,7 @@ Aws::String AccessManagementClient::GetAccountId()
     {
         return ExtractAccountIdFromArn(outcome.GetError().GetMessage());
     }
-    
+
     return "";
 }
 
@@ -1633,7 +1649,7 @@ bool AccessManagementClient::VerifyOrCreateCredentialsFileForUser(const Aws::Str
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 QueryResult AccessManagementClient::GetIdentityPool(const Aws::String& poolName, Aws::String& identityPoolId)
-{    
+{
     static const uint32_t MAX_RESULTS_IDENTITY_POOLS = 20;
 
     ListIdentityPoolsRequest listPoolsRequest;
@@ -1648,9 +1664,9 @@ QueryResult AccessManagementClient::GetIdentityPool(const Aws::String& poolName,
             AWS_LOGSTREAM_INFO(LOG_TAG, "ListIdentityPools failed: " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
             return QueryResult::FAILURE;
         }
-    
+
         auto pools = outcome.GetResult().GetIdentityPools();
-        auto poolIter = std::find_if(pools.cbegin(), pools.cend(), [&](const IdentityPoolShortDescription& poolDesc){ 
+        auto poolIter = std::find_if(pools.cbegin(), pools.cend(), [&](const IdentityPoolShortDescription& poolDesc){
                                                                         return poolDesc.GetIdentityPoolName() == poolName; });
         if(poolIter != pools.cend())
         {
@@ -1686,9 +1702,9 @@ bool AccessManagementClient::CreateIdentityPool(const Aws::String& poolName, boo
         AWS_LOGSTREAM_INFO(LOG_TAG, "CreateIdentityPool failed for pool " << poolName << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return false;
     }
-    
+
     identityPoolId.assign(outcome.GetResult().GetIdentityPoolId());
-    return true;    
+    return true;
 }
 
 bool AccessManagementClient::DeleteIdentityPool(const Aws::String& poolName)
@@ -1721,7 +1737,7 @@ static const char* ConvertRoleBindingToMapKey(IdentityPoolRoleBindingType roleKe
     return "";
 }
 
-QueryResult AccessManagementClient::IsRoleBoundToIdentityPool(const Aws::String& identityPoolId, 
+QueryResult AccessManagementClient::IsRoleBoundToIdentityPool(const Aws::String& identityPoolId,
                                                               const Aws::String& roleArn,
                                                               IdentityPoolRoleBindingType roleKey)
 {
@@ -1734,10 +1750,10 @@ QueryResult AccessManagementClient::IsRoleBoundToIdentityPool(const Aws::String&
         AWS_LOGSTREAM_INFO(LOG_TAG, "GetIdentityPoolRoles failed for pool " << identityPoolId << ": " << outcome.GetError().GetMessage() << " ( " << outcome.GetError().GetExceptionName() << " )\n");
         return QueryResult::FAILURE;
     }
-    
+
     auto roleMap = outcome.GetResult().GetRoles();
     auto mapIter = roleMap.find(ConvertRoleBindingToMapKey(roleKey));
-    
+
     if ( mapIter != roleMap.end() && mapIter->second == roleArn )
     {
         return QueryResult::YES;
@@ -1745,10 +1761,10 @@ QueryResult AccessManagementClient::IsRoleBoundToIdentityPool(const Aws::String&
     else
     {
         return QueryResult::NO;
-    }   
+    }
 }
 
-bool AccessManagementClient::BindRoleToIdentityPool(const Aws::String& identityPoolId, 
+bool AccessManagementClient::BindRoleToIdentityPool(const Aws::String& identityPoolId,
                                                     const Aws::String& roleArn,
                                                     IdentityPoolRoleBindingType roleKey)
 {
@@ -1795,7 +1811,7 @@ bool AccessManagementClient::GetOrCreateIdentityPool(const Aws::String& poolName
     return false;
 }
 
-bool AccessManagementClient::BindRoleToIdentityPoolIfNot(const Aws::String& identityPoolId, 
+bool AccessManagementClient::BindRoleToIdentityPoolIfNot(const Aws::String& identityPoolId,
                                                          const Aws::String& roleArn,
                                                          IdentityPoolRoleBindingType roleKey)
 {
