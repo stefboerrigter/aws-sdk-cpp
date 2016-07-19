@@ -46,7 +46,7 @@
 #include "sqsApplication.h"
 
 
-#define DEBUG_INFO 
+//#define DEBUG_INFO 
 
 using namespace std;
 using namespace Aws::Http;
@@ -107,13 +107,7 @@ void sqsApplication::sendMessage(int amount)
     SendMessageRequest sendMessageRequest;
     MessageAttributeValue stringAttributeValue;
     MessageAttributeValue binaryAttributeValue;
-    
-    time_t now = time(0);
-    Aws::String date = "TestMessageBody ";
-    date = date + ctime(&now);
 
-    
-    sendMessageRequest.SetMessageBody(date);
     stringAttributeValue.SetStringValue("TestString");
     stringAttributeValue.SetDataType("String");
     sendMessageRequest.AddMessageAttributes("TestStringAttribute", stringAttributeValue);
@@ -132,22 +126,27 @@ void sqsApplication::sendMessage(int amount)
 #endif
 
     binaryAttributeValue.SetBinaryValue(byteBuffer);
-    binaryAttributeValue.SetDataType("BinaryData");
+    binaryAttributeValue.SetDataType("Binary");
     sendMessageRequest.AddMessageAttributes("TestBinaryAttribute", binaryAttributeValue);
 
     sendMessageRequest.SetQueueUrl(m_queueUrl);
     
     for(int i = 0; i < amount; i++)
     {
+      time_t now = time(0);
+      Aws::String date = "TestMessageBody ";
+      date = date + ctime(&now);
+#ifdef DEBUG_INFO
+      cout << date << endl;
+#endif
+      sendMessageRequest.SetMessageBody(date);
+    
       SendMessageOutcome sendMessageOutcome = sqsClient->SendMessage(sendMessageRequest);
       
       if(!sendMessageOutcome.IsSuccess())
       {
         cout << "Message outcome is not Successfull" << endl;
-      }
-      else
-      { 
-        cout << "OK" << endl; 
+        return;
       }
     }
 };

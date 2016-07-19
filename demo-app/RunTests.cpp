@@ -25,20 +25,26 @@ int main(int argc, char** argv)
     Aws::InitAPI(options);
     int amount_messages = 1;
       
+    std::string paramAmount("-n");
+    std::string paramHelp("-h");
     
-    for(int i = 1; i <= argc; i++)
+    for(int i = 1; i < argc; i++)
     {
-       if(argv[i] == "-n")
+       if(paramAmount.compare(argv[i]) == 0)
        {
          i++;
          amount_messages = atoi(argv[i]);
+       }
+       else if(paramHelp.compare(argv[i]) == 0)
+       {
+         std::cout << "Help" <<std::endl << "-n <amount> for amount of messages" << std::endl << std::endl;
+         return 0;
        }
     }
     
     sqsApplication app;
     app.initQueue();
     app.sendMessage(amount_messages);
-
     
     Aws::ShutdownAPI(options);
     return 0;
