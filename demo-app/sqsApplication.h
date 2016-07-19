@@ -17,7 +17,7 @@ class sqsApplication
     ~sqsApplication();
     
     void initQueue();
-    void sendMessage();
+    void sendMessage(int amount);
     bool receiveMessage(Aws::String &handle);
     void deleteMessage(Aws::String handle);
 };

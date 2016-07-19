@@ -46,8 +46,9 @@
 #include "sqsApplication.h"
 
 
-//#define DEBUG_INFO 
+#define DEBUG_INFO 
 
+using namespace std;
 using namespace Aws::Http;
 using namespace Aws;
 using namespace Aws::Auth;
@@ -75,7 +76,7 @@ sqsApplication::~sqsApplication()
 void sqsApplication::initQueue()
 {
 #ifdef DEBUG_INFO
-  std::cout << "Starting Queue" << std::endl;
+  cout << "Starting Queue" << endl;
 #endif
   CreateQueueRequest request;
   request.SetQueueName(m_queuename);
@@ -87,7 +88,7 @@ void sqsApplication::initQueue()
     if (outcome.IsSuccess())
     {
 #ifdef DEBUG_INFO
-        std::cout << "Success, QUEUE-URL: " << outcome.GetResult().GetQueueUrl() << std::endl;
+        cout << "Success, QUEUE-URL: " << outcome.GetResult().GetQueueUrl() << endl;
 #endif
         m_queueUrl = outcome.GetResult().GetQueueUrl() ;
     }
@@ -95,12 +96,12 @@ void sqsApplication::initQueue()
     {
       break;
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    this_thread::sleep_for(chrono::seconds(1));
   }
 }
 
 
-void sqsApplication::sendMessage()
+void sqsApplication::sendMessage(int amount)
 {
     // current date/time based on current system
     SendMessageRequest sendMessageRequest;
@@ -127,7 +128,7 @@ void sqsApplication::sendMessage()
     }
     
 #ifdef DEBUG_INFO
-    std::cout << " Sending Test Message " << std::endl;
+    cout << " Sending Test Messages " << amount << endl;
 #endif
 
     binaryAttributeValue.SetBinaryValue(byteBuffer);
@@ -135,11 +136,19 @@ void sqsApplication::sendMessage()
     sendMessageRequest.AddMessageAttributes("TestBinaryAttribute", binaryAttributeValue);
 
     sendMessageRequest.SetQueueUrl(m_queueUrl);
-    SendMessageOutcome sendMessageOutcome = sqsClient->SendMessage(sendMessageRequest);
     
-    if(!sendMessageOutcome.IsSuccess())
+    for(int i = 0; i < amount; i++)
     {
-      std::cout << "Message outcome is not Successfull" << std::endl;
+      SendMessageOutcome sendMessageOutcome = sqsClient->SendMessage(sendMessageRequest);
+      
+      if(!sendMessageOutcome.IsSuccess())
+      {
+        cout << "Message outcome is not Successfull" << endl;
+      }
+      else
+      { 
+        cout << "OK" << endl; 
+      }
     }
 };
 
@@ -153,18 +162,18 @@ bool sqsApplication::receiveMessage(Aws::String &handle)
     ReceiveMessageOutcome receiveMessageOutcome = sqsClient->ReceiveMessage(receiveMessageRequest);
     if(!(receiveMessageOutcome.IsSuccess()))
     {
-      std::cout << "FAILED to Receive message" << std::endl;
+      cout << "FAILED to Receive message" << endl;
       return false;
     }
     ReceiveMessageResult receiveMessageResult = receiveMessageOutcome.GetResult();
     
     if(receiveMessageResult.GetMessages().size() != 1)
     {
-       //std::cout << "Received size is not 1; " << receiveMessageResult.GetMessages().size() << std::endl;
+       //cout << "Received size is not 1; " << receiveMessageResult.GetMessages().size() << endl;
        return false;
     }
     
-    std::cout << "Received MSG,  (Body: " << receiveMessageResult.GetMessages()[0].GetBody() << ")." << std::endl;
+    cout << "Received MSG,  (Body: " << receiveMessageResult.GetMessages()[0].GetBody() << ")." << endl;
 
     //set handle to parameter, to return it.
     handle = receiveMessageResult.GetMessages()[0].GetReceiptHandle();
@@ -181,14 +190,14 @@ void sqsApplication::deleteMessage(Aws::String receiptHandle)
     DeleteMessageOutcome deleteMessageOutcome = sqsClient->DeleteMessage(deleteMessageRequest);
     if(!deleteMessageOutcome.IsSuccess())
     {
-      std::cout << "Message Deletion did not succeed" << std::endl;
+      cout << "Message Deletion did not succeed" << endl;
     }else{ 
 #ifdef DEBUG_INFO
-      std::cout << "Message Deletion succeeded" << std::endl; 
+      cout << "Message Deletion succeeded" << endl; 
 #endif
     }
 #ifdef DEBUG_INFO
-    std::cout << "Deleting QUEUE Request" << std::endl;
+    cout << "Deleting QUEUE Request" << endl;
 #endif
     DeleteQueueRequest deleteQueueRequest;
     deleteQueueRequest.WithQueueUrl(m_queueUrl);

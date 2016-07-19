@@ -23,18 +23,22 @@ int main(int argc, char** argv)
     Aws::String handle;
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options);
-       
-    //::testing::InitGoogleTest(&argc, argv);
-    //int exitCode = RUN_ALL_TESTS();
+    int amount_messages = 1;
+      
+    
+    for(int i = 1; i <= argc; i++)
+    {
+       if(argv[i] == "-n")
+       {
+         i++;
+         amount_messages = atoi(argv[i]);
+       }
+    }
+    
     sqsApplication app;
     app.initQueue();
-    app.sendMessage();
-    //if(app.receiveMessage(handle))
-    //{
-      
-    //}
-    
-    //app.deleteMessage(handle);
+    app.sendMessage(amount_messages);
+
     
     Aws::ShutdownAPI(options);
     return 0;
