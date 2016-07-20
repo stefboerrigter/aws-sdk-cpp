@@ -57,11 +57,11 @@ using namespace Aws::SQS;
 using namespace Aws::SQS::Model;
 using namespace Aws::Utils::Json;
 
-static const int DATA_SIZE = (1024 * 200); //~200 KB 
+static const int DATA_SIZE = (1024 * 100); //~200 KB 
 
 //Constructor
-sqsApplication::sqsApplication() :
-  m_queuename("test-new-stef-queue"),
+sqsApplication::sqsApplication(Aws::String queueName) :
+  m_queuename(queueName),
   m_queueUrl("")
 {
   init();
@@ -209,7 +209,7 @@ void sqsApplication::init()
 {
   ClientConfiguration config;
   config.scheme = Scheme::HTTPS;
-  config.region = Region::US_EAST_1;
+  config.region = Region::EU_CENTRAL_1;
   
   sqsClient = Aws::MakeShared<SQSClient>("QueueOperationTest", Aws::MakeShared<DefaultAWSCredentialsProviderChain>("QueueOperationTest"), config);
         

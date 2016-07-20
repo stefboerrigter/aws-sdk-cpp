@@ -13,7 +13,7 @@ class sqsApplication
   private: //functions
     void init();
   public:
-    sqsApplication();
+    sqsApplication(Aws::String queueName);
     ~sqsApplication();
     
     void initQueue();

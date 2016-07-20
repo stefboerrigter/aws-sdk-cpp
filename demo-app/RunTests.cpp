@@ -23,9 +23,11 @@ int main(int argc, char** argv)
     Aws::String handle;
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options);
+    Aws::String queueName("test-default-queue-name");
     int amount_messages = 1;
       
     std::string paramAmount("-n");
+    std::string paramQueue("-q");
     std::string paramHelp("-h");
     
     for(int i = 1; i < argc; i++)
@@ -35,6 +37,13 @@ int main(int argc, char** argv)
          i++;
          amount_messages = atoi(argv[i]);
        }
+       
+       if(paramQueue.compare(argv[i]) == 0)
+       {
+         i++;
+         queueName = (argv[i]);
+       }
+       
        else if(paramHelp.compare(argv[i]) == 0)
        {
          std::cout << "Help" <<std::endl << "-n <amount> for amount of messages" << std::endl << std::endl;
@@ -42,7 +51,7 @@ int main(int argc, char** argv)
        }
     }
     
-    sqsApplication app;
+    sqsApplication app(queueName);
     app.initQueue();
     app.sendMessage(amount_messages);
     

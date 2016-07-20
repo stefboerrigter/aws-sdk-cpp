@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options);
        
-    sqsApplication app;
+    sqsApplication app("ListenQueue");
     app.initQueue();
 
     while(true)
