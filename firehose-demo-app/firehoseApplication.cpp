@@ -63,7 +63,7 @@ firehoseApp::firehoseApp(Aws::String streamName) :
   {
     m_initialized = true;
   }
-  std::ifstream fc("../demo.tar.gz", std::ios_base::in | std::ios_base::binary);
+  std::ifstream fc("demofile.txt", std::ios_base::in | std::ios_base::binary);
   m_buffer << fc.rdbuf();
 #ifdef DEBUG_INFO
   cout << "Reading File Done" << endl;
@@ -89,27 +89,19 @@ void firehoseApp::sendMessage(int amount)
   cout << "Buff Size to transfer: [" << m_buffer.str().length() << "]" << endl;
 #endif
   Aws::Utils::ByteBuffer buff((unsigned char*)m_buffer.str().c_str(), m_buffer.str().length());
-
-  //Aws::Vector <Record > putRecordList;// = new ArrayList<>();
-  //List <PutRecordsRequestEntry> putRecordsRequestEntryList  = new ArrayList<>(); 
-  //for(int i = 0; i < 100; i++)
+  
   {
     record.SetData(buff);
-   //PutRecordsRequestEntry putRecordsRequestEntry;
-  //  putRecordsRequestEntry.setData(ByteBuffer.wrap(String.valueOf(i).getBytes()));
-  //  putRecordsRequestEntry.setPartitionKey(String.format("partitionKey-%d", i));
-  //  putRecordsRequestEntryList.add(putRecordsRequestEntry); 
   }
   request.SetRecord(record);//putRecordList);
-  Model::PutRecordOutcome outcome = m_firehoseClient->PutRecord(request);
- 
-  if(outcome.IsSuccess())
+  for(int i = 0; i < amount; i++)
   {
-    cout << "Transfer is Success!" << endl;
-  }
-  else
-  {
-    cout << "Transfer status: Failure!" << endl;
+    Model::PutRecordOutcome outcome = m_firehoseClient->PutRecord(request);
+    if(!outcome.IsSuccess())
+    {
+      cout << "Error sending message " << i + 1 << "." << endl;
+      i = amount;
+    }
   }
 }
 
