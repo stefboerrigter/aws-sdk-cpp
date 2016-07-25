@@ -16,7 +16,7 @@
 
 //TBD; TODO; are all these includes required.?
 
-#include <aws/core/client/ClientConfiguration.h>
+#include "firehoseApplication.h"
 #include <aws/core/client/CoreErrors.h>
 #include <aws/core/auth/AWSCredentialsProviderChain.h>
 #include <aws/core/utils/json/JsonSerializer.h>
@@ -26,17 +26,12 @@
 #include <aws/access-management/AccessManagementClient.h>
 #include <aws/iam/IAMClient.h>
 #include <aws/cognito-identity/CognitoIdentityClient.h>
-#include <aws/core/utils/memory/stl/AWSStringStream.h>
 
 //Verified includes:
 #include <aws/firehose/model/CreateDeliveryStreamRequest.h>
 #include <aws/firehose/model/S3DestinationConfiguration.h>
 
 #include <aws/firehose/model/PutRecordRequest.h>
-
-
-#include "firehoseApplication.h"
-#include <fstream>
 
 
 #define DEBUG_INFO 
@@ -56,69 +51,26 @@ static const int DATA_SIZE = (1024 * 200); //~200 KB
 //Constructor
 firehoseApp::firehoseApp(Aws::String streamName) :
   m_firehoseClient(nullptr),
-  m_streamName(streamName),
-  m_initialized(false)
+  m_streamName(streamName)
 {
-  if(init())
-  {
-    m_initialized = true;
-  }
-  std::ifstream fc("demofile.txt", std::ios_base::in | std::ios_base::binary);
-  m_buffer << fc.rdbuf();
-#ifdef DEBUG_INFO
-  cout << "Reading File Done" << endl;
-#endif
+  m_config.scheme = Scheme::HTTPS;
+  //m_config.region = Region::EU_WEST_1;
+  m_config.region = Region::US_EAST_1;
+  
+  m_firehoseClient = new FirehoseClient(m_config);
 }
 
 //destructor
 firehoseApp::~firehoseApp()
 {
-
+  
 }
 
-void firehoseApp::sendMessage(int amount)
+bool firehoseApp::initQueue()
 {
-  if(!m_initialized){ 
-    return;
-  }
-  
-  PutRecordRequest request;
-  request.SetDeliveryStreamName(m_streamName);
-  Record record;
-#ifdef DEBUG_INFO  
-  cout << "Buff Size to transfer: [" << m_buffer.str().length() << "]" << endl;
-#endif
-  Aws::Utils::ByteBuffer buff((unsigned char*)m_buffer.str().c_str(), m_buffer.str().length());
-  
-  {
-    record.SetData(buff);
-  }
-  request.SetRecord(record);//putRecordList);
-  for(int i = 0; i < amount; i++)
-  {
-    Model::PutRecordOutcome outcome = m_firehoseClient->PutRecord(request);
-    if(!outcome.IsSuccess())
-    {
-      cout << "Error sending message " << i + 1 << "." << endl;
-      i = amount;
-    }
-  }
-}
+  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", m_config);
 
-//private
-bool firehoseApp::init()
-{
-  ClientConfiguration config;
-  config.scheme = Scheme::HTTPS;
-  //config.region = Region::EU_WEST_1;
-  config.region = Region::US_EAST_1;
-  
-  m_firehoseClient = new FirehoseClient(config);
-  //m_firehoseClient = Aws::MakeShared<FirehoseClient>("QueueOperationTest", Aws::MakeShared<DefaultAWSCredentialsProviderChain>("QueueOperationTest"), config);
-  
-  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", config);
-
-  auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", config);
+  auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", m_config);
   Aws::AccessManagement::AccessManagementClient accessManagementClient(iamClient, cognitoClient);
   
   Aws::String m_accountId = accessManagementClient.GetAccountId();
@@ -167,4 +119,45 @@ bool firehoseApp::init()
     cout << "Other error.... "<< endl;
   }
   return false;
+}
+
+bool firehoseApp::sendMessage(const Aws::StringStream& data, int repetitions/* = 0*/)
+{
+  
+  PutRecordRequest request;
+  //set stream name;
+  request.SetDeliveryStreamName(m_streamName);
+  
+  Record record;
+#ifdef DEBUG_INFO  
+  cout << "Buff Size to transfer: [" << data.str().length() << "]" << endl;
+#endif
+  Aws::Utils::ByteBuffer buff((unsigned char*)data.str().c_str(), data.str().length());
+  
+  //apply stream data to record buffer Data
+  record.SetData(buff);
+  
+  //set record to request
+  request.SetRecord(record);
+  //for loop is for testing purposes only
+  for(int i = 0; i <= repetitions; i++)
+  {
+    //send request to cloud
+    Model::PutRecordOutcome outcome = m_firehoseClient->PutRecord(request);
+    if(!outcome.IsSuccess())
+    {
+      cout << "Error sending message " << i + 1 << "." << endl;
+      i = repetitions;
+      return false;
+    }
+  }
+  return true;
+}
+
+//private
+bool firehoseApp::init()
+{
+  
+
+  return true;
 }

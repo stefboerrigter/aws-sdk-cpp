@@ -17,6 +17,8 @@
 #include <aws/core/Aws.h>
 #include "firehoseApplication.h"
 
+#include <fstream>
+
 int main(int argc, char** argv)
 {
     std::cout << "Starting firehose demo" << std::endl;
@@ -51,9 +53,17 @@ int main(int argc, char** argv)
          return 0;
        }
     }
+    
+    std::ifstream fc("demofile.txt", std::ios_base::in | std::ios_base::binary);
+    Aws::StringStream buffer;
+    buffer << fc.rdbuf();
+  
+    //start of class
     firehoseApp app(streamName);
-    //app.initQueue();
-    app.sendMessage(amount_messages);
+    if(app.initQueue()) //success
+    {
+      app.sendMessage(buffer, amount_messages);
+    }
     
     Aws::ShutdownAPI(options);
     return 0;

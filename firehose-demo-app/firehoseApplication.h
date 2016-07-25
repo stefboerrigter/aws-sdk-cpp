@@ -1,17 +1,15 @@
 #pragma once
 
 #include <aws/firehose/FirehoseClient.h>
+#include <aws/core/client/ClientConfiguration.h>
+#include <aws/core/utils/memory/stl/AWSStringStream.h>
 
 class firehoseApp
 {
   private:
-    //Aws::String m_accountId;
-    //std::shared_ptr<Aws::Firehose::FirehoseClient> m_firehoseClient;
+    Aws::Client::ClientConfiguration m_config;
     Aws::Firehose::FirehoseClient *m_firehoseClient;
     Aws::String m_streamName;
-    //Aws::String m_queueUrl;
-    bool m_initialized;
-    Aws::StringStream m_buffer;
 
   private: //functions
     bool init();
@@ -19,8 +17,9 @@ class firehoseApp
     firehoseApp(Aws::String name);
     ~firehoseApp();
     
-    /*void initQueue();*/
-    void sendMessage(int amount);
+    bool initQueue();
+    
+    bool sendMessage(const Aws::StringStream& data, int repetitions = 0);
     /*
     bool receiveMessage(Aws::String &handle);
     void deleteMessage(Aws::String handle);
